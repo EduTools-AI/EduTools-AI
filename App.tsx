@@ -32,17 +32,17 @@ const App: React.FC = () => {
 
   const handleToolClick = async (mode: ToolMode) => {
     // Validation logic for specific modes
-    if (mode === ToolMode.REWRITER && !params.additionalNotes) {
-      setError("Rewriter mode requires existing text in 'Contextual Input'.");
-      return;
-    }
     if (mode === ToolMode.MEMORANDUM && !params.additionalNotes && !params.topic) {
       setError("Memorandum mode requires a Topic or pasted questions in 'Contextual Input'.");
       return;
     }
-    if (!params.topic && mode !== ToolMode.REWRITER && mode !== ToolMode.MEMORANDUM) {
+    if (!params.topic && mode !== ToolMode.LESSON_PLANNER) {
       setError("Please specify a Topic (e.g., 'Safety') in the sidebar first.");
       return;
+    }
+    if (mode === ToolMode.LESSON_PLANNER && !params.topic) {
+       setError("Please specify a Topic to generate a lesson plan.");
+       return;
     }
     
     const updatedParams = { ...params, mode };
@@ -77,7 +77,7 @@ const App: React.FC = () => {
       </div>
       
       <div className="relative">
-        <h3 className="font-black text-slate-900 text-xl mb-2 tracking-tight">{mode}</h3>
+        <h3 className="font-black text-slate-900 text-xl mb-2 tracking-tight leading-none">{mode}</h3>
         <p className="text-slate-500 text-sm leading-relaxed mb-6">{description}</p>
         
         <div className={`flex items-center gap-2 text-${color}-600 text-xs font-bold uppercase tracking-widest`}>
@@ -185,7 +185,7 @@ const App: React.FC = () => {
           <section className="space-y-4">
             <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Contextual Input</h3>
             <textarea 
-              placeholder="Paste existing text for Rewriter mode or specific details here..."
+              placeholder="Paste existing text or specific instructions here..."
               className="w-full bg-slate-900 border border-slate-800 p-4 rounded-xl text-xs font-medium min-h-[140px] resize-none focus:border-indigo-500 outline-none transition-all placeholder:text-slate-600"
               value={params.additionalNotes}
               onChange={e => setParams({...params, additionalNotes: e.target.value})}
@@ -225,7 +225,7 @@ const App: React.FC = () => {
                 <ToolCard 
                   mode={ToolMode.QUESTION_GENERATOR}
                   icon={<ICONS.Plus />}
-                  description="Generate formal CAPS examination questions with mark allocation."
+                  description="Generate a formal CAPS examination paper with instructions and mark allocation."
                   color="indigo"
                 />
                 <ToolCard 
@@ -241,9 +241,9 @@ const App: React.FC = () => {
                   color="amber"
                 />
                 <ToolCard 
-                  mode={ToolMode.REWRITER}
+                  mode={ToolMode.LESSON_PLANNER}
                   icon={<ICONS.Zap />}
-                  description="Adjust cognitive demand or rewrite content for exam standards."
+                  description="Generate a pedagogical South African CAPS Lesson Plan."
                   color="purple"
                 />
               </div>
@@ -267,7 +267,7 @@ const App: React.FC = () => {
               </div>
               <h2 className="text-4xl font-black text-slate-900 tracking-tighter mb-4 italic uppercase">Generating Content</h2>
               <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">
-                Assembling {params.subject} assessment for {params.grade}...
+                Assembling {params.subject} {params.mode} for {params.grade}...
               </p>
               <style>{`
                 @keyframes loading {
@@ -293,7 +293,7 @@ const App: React.FC = () => {
                     onClick={() => window.print()}
                     className="bg-slate-950 text-white px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center gap-3 shadow-2xl hover:bg-slate-900 active:scale-95 transition-all"
                   >
-                    <ICONS.Print /> Download NSC Paper (PDF)
+                    <ICONS.Print /> Print / Save as PDF
                   </button>
                 </div>
               </div>
@@ -304,10 +304,10 @@ const App: React.FC = () => {
                     {result.content.split('\n').map((line, i) => {
                       if (line.startsWith('# ')) return (
                         <div key={i} className="mb-16">
-                          <h1 className="text-4xl font-black text-center uppercase border-b-8 border-slate-950 pb-6 mb-2 tracking-tighter italic">
+                          <h1 className="text-4xl font-black text-center uppercase border-b-8 border-slate-950 pb-6 mb-2 tracking-tighter italic leading-tight">
                             {line.replace('# ', '')}
                           </h1>
-                          <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.5em]">Official Assessment Documentation</p>
+                          <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.5em]">Official Educational Documentation</p>
                         </div>
                       );
                       if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-black mt-16 mb-6 border-b-4 border-slate-100 pb-3 uppercase italic tracking-tight">{line.replace('## ', '')}</h2>;

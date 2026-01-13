@@ -1,9 +1,9 @@
 
 export enum ToolMode {
-  QUESTION_GENERATOR = 'Question Generator',
+  QUESTION_GENERATOR = 'Question Paper Generator',
   MEMORANDUM = 'Memorandum / Model Answers',
   WORKSHEET_BUILDER = 'Worksheet & Revision Builder',
-  REWRITER = 'Question Rewriter'
+  LESSON_PLANNER = 'Lesson Planner'
 }
 
 export enum CognitiveLevel {

@@ -20,7 +20,6 @@ export const generateEducationalContent = async (params: GeneratorParams): Promi
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
   
   // SELECT SUBJECT ENGINE PROMPT
-  // The user prompt logic specifies a check for "Mechanical Technology – Fitting & Machining"
   const isMechTech = params.subject.includes("Mechanical Technology");
   const subjectEnginePrompt = isMechTech ? MECH_TECH_MASTER_PROMPT : GENERIC_CAPS_SUBJECT_PROMPT;
 
@@ -31,9 +30,9 @@ export const generateEducationalContent = async (params: GeneratorParams): Promi
 
   switch (params.mode) {
     case ToolMode.QUESTION_GENERATOR:
-      toolModeInstruction = `You are operating in TOOL MODE: QUESTION GENERATOR. Follow all rules defined in the system and subject prompts.`;
+      toolModeInstruction = `You are operating in TOOL MODE: QUESTION PAPER GENERATOR. Follow all rules defined in the system and subject prompts.`;
       userInputBlock = `
-Generate CAPS-aligned examination questions using the following parameters:
+Generate a CAPS-aligned examination paper using the following parameters:
 Grade: ${params.grade}
 Subject: ${params.subject}
 Topic: ${params.topic}
@@ -42,12 +41,13 @@ Cognitive Level: ${params.cognitiveLevel}
 Number of Questions: ${params.questionCount}
 Total Marks: ${params.totalMarks || "Allocate appropriately"}
 
-Use CAPS-appropriate command verbs. Ensure realistic NSC-level difficulty.`;
+Use CAPS-appropriate command verbs. Ensure realistic NSC-level difficulty. Structure it as a formal examination paper.`;
       outputFormatBlock = `
 Output format:
 - Number each question clearly
-- Include sub-questions where appropriate
-- Indicate mark allocation per question
+- Include sub-questions where appropriate (e.g. 1.1, 1.1.1)
+- Indicate mark allocation per question (e.g. [10] or (2))
+- Include an instruction block for candidates
 - Do not include answers or explanations`;
       break;
 
@@ -86,24 +86,30 @@ Output format:
 - Title the worksheet clearly
 - Structure questions logically
 - Progress difficulty appropriately
-- If answers are included, separate clearly at the end`;
+- Include spaces for learner details`;
       break;
 
-    case ToolMode.REWRITER:
-      toolModeInstruction = `You are operating in TOOL MODE: QUESTION REWRITER / DIFFICULTY ADJUSTER.`;
+    case ToolMode.LESSON_PLANNER:
+      toolModeInstruction = `You are operating in TOOL MODE: LESSON PLANNER.`;
       userInputBlock = `
-Rewrite the provided content to the following specifications:
+Generate a CAPS-aligned Lesson Plan using the following parameters:
 Grade: ${params.grade}
 Subject: ${params.subject}
-Target Cognitive Level: ${params.cognitiveLevel}
+Topic: ${params.topic}
+Sub-topic: ${params.subTopic || "Not specified"}
 
-Content to Rewrite:
-${params.additionalNotes}`;
+The lesson plan must follow standard South African Department of Basic Education pedagogical phases.`;
       outputFormatBlock = `
 Output format:
-- Provide only the rewritten question/content
-- Do not include explanations or answers
-- Adjust cognitive demand using CAPS-appropriate action verbs (Lower: Identify, Middle: Explain, Higher: Analyse)`;
+- Lesson Title, Subject, Grade, and Duration
+- CAPS Specific Aims and Objectives
+- Teaching Aids and Resources needed
+- Lesson Phases:
+  1. Introduction / Baseline Assessment
+  2. Content Presentation (Teacher Activity)
+  3. Learner Activity (Application)
+  4. Conclusion / Formative Assessment / Homework
+- Summary of Content`;
       break;
   }
 
@@ -122,9 +128,9 @@ ${outputFormatBlock}
 QUALITY CONTROL RULES:
 - Avoid repetition and vague phrasing.
 - Avoid incorrect technical facts.
-- Avoid American or non-SA terminology.
+- Avoid American or non-SA terminology (use "marks", "grade", "NSC", "memorandum").
 - If any required information is missing, make professional CAPS-aligned assumptions and state them before generating.
-- Maintain examiner credibility at all times.
+- Maintain examiner/educator credibility at all times.
 `;
 
   try {
@@ -132,7 +138,7 @@ QUALITY CONTROL RULES:
       model: 'gemini-3-pro-preview',
       contents: finalPrompt,
       config: {
-        temperature: 0.15, // Extremely low temperature for strict adherence to technical facts
+        temperature: 0.2, // Low temperature for technical accuracy
         topP: 0.95,
       }
     });
@@ -140,6 +146,6 @@ QUALITY CONTROL RULES:
     return response.text || "No content generated. Please refine your inputs.";
   } catch (error: any) {
     console.error("Gemini API Error:", error);
-    throw new Error("Assessment generation failed. Please verify your connection or subject settings.");
+    throw new Error("Content generation failed. Please verify your connection or subject settings.");
   }
 };
